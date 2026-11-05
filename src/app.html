@@ -1,0 +1,486 @@
+<title>Interview Reflex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: one console column; LeetCode cards widen into problem | answer rail. Deliberately dark-only, like a game screen. */
+:root {
+  --bg: #0e1117; --panel: #161b24; --panel2: #1d2430; --line: #2a3241; --fg: #e9e6dc; --muted: #8b93a3;
+  --accent: #f0b54a; --accent-ink: #1a1306; --good: #46d19c; --bad: #ff6b5e; --dim: #242c39; --learn: #c98a3a;
+  --easy: #46d19c; --medium: #f0b54a; --hard: #ff6b5e;
+  --display: "Chakra Petch", "Trebuchet MS", sans-serif;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); }
+body {
+  margin: 0; color: var(--fg); font: 15px/1.55 var(--sans);
+  padding-block: 12px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+header { max-width: 780px; margin: 0 auto 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+.wide-on header { max-width: 1100px; }
+.brand { font: 700 20px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; margin: 0; }
+.brand span { color: var(--accent); }
+nav { display: flex; gap: 4px; }
+nav button { font: 600 13px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: none; border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+nav button[aria-current="true"] { color: var(--fg); border-color: var(--line); background: var(--panel); }
+
+.screen { max-width: 780px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; min-width: 0; box-sizing: border-box; }
+.screen.wide { max-width: 1100px; }
+.label { font: 600 11px var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h2 { font: 700 30px/1.1 var(--display); letter-spacing: .02em; margin: 6px 0 8px; text-wrap: balance; }
+h3 { font: 600 17px/1.3 var(--display); letter-spacing: .03em; margin: 0 0 8px; }
+p { margin: 8px 0; }
+.modes { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin: 14px 0 18px; }
+.mode { text-align: left; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; font: inherit; min-width: 0; }
+.mode[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.mode b { display: block; font: 600 15px var(--display); letter-spacing: .03em; }
+.mode small { color: var(--muted); font-size: 12px; display: block; }
+.meter { height: 6px; border-radius: 3px; background: var(--dim); overflow: hidden; margin-top: 8px; display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .a { background: var(--good); } .meter .l { background: var(--learn); }
+.btn { font: 700 16px var(--display); letter-spacing: .08em; text-transform: uppercase; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 14px 22px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.small { font-size: 13px; color: var(--muted); }
+
+/* run */
+.hud { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font: 600 13px var(--mono); color: var(--muted); margin-bottom: 10px; }
+.hud .cat { color: var(--accent); font-family: var(--display); letter-spacing: .12em; text-transform: uppercase; }
+.hud .combo { margin-left: auto; color: var(--fg); }
+.hud .combo b { color: var(--accent); font-size: 16px; }
+.track { height: 4px; background: var(--dim); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.track i { display: block; height: 100%; background: var(--muted); }
+.clock { height: 6px; background: var(--dim); border-radius: 3px; overflow: hidden; margin-bottom: 18px; }
+.clock i { display: block; height: 100%; width: 0; background: var(--good); }
+.clock.late i { background: var(--bad); }
+.card { min-height: 110px; display: grid; align-content: center; padding: 6px 2px 18px; }
+.q { font: 500 21px/1.45 var(--sans); text-wrap: pretty; }
+.formula { font: 500 26px/1.4 var(--mono); color: var(--fg); display: inline-block; overflow-wrap: anywhere; }
+.q strong { color: var(--accent); }
+.pad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pad.one { grid-template-columns: 1fr; }
+@media (max-width: 600px) { .pad { grid-template-columns: 1fr; } .q { font-size: 18px; } .formula { font-size: 21px; } h2 { font-size: 24px; } .screen { padding: 16px 14px; } }
+.opt { display: flex; gap: 12px; align-items: flex-start; text-align: left; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 14px; font: 500 15px/1.4 var(--sans); cursor: pointer; min-height: 56px; min-width: 0; overflow-wrap: anywhere; }
+.opt:hover { border-color: var(--muted); }
+.opt .k { flex: none; font: 700 13px var(--mono); width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: var(--dim); color: var(--muted); }
+.opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--panel2)); }
+.opt.right .k { background: var(--good); color: var(--bg); }
+.opt.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, var(--panel2)); }
+.opt.wrong .k { background: var(--bad); color: var(--bg); }
+.opt[disabled] { cursor: default; }
+.fb { min-height: 64px; margin-top: 14px; }
+.fb .verdict { font: 700 18px var(--display); letter-spacing: .06em; text-transform: uppercase; }
+.fb .verdict.ok { color: var(--good); } .fb .verdict.no { color: var(--bad); }
+.fb .ms { font: 600 13px var(--mono); color: var(--muted); margin-left: 8px; }
+.fb ul { margin: 6px 0 10px; padding-left: 18px; } .fb li { margin: 3px 0; }
+.hint { font-size: 12px; color: var(--muted); margin-top: 12px; }
+.flash-ok { animation: okf .35s ease; } .flash-no { animation: nof .45s ease; }
+@keyframes okf { 0% { box-shadow: 0 0 0 0 var(--good); } 100% { box-shadow: 0 0 0 14px transparent; } }
+@keyframes nof { 0%, 100% { transform: none; } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { .flash-ok, .flash-no { animation: none; } }
+
+/* LeetCode problem card */
+.lcgrid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 900px) { .lcgrid { grid-template-columns: minmax(0, 1fr) 320px; } .side { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); } }
+.prob { min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+.phead h3 { font: 600 21px/1.25 var(--display); margin: 0; letter-spacing: .01em; }
+.diff { font: 600 12px var(--sans); padding: 2px 10px; border-radius: 99px; background: var(--dim); }
+.diff.Easy { color: var(--easy); } .diff.Medium { color: var(--medium); } .diff.Hard { color: var(--hard); }
+.desc p, .desc ul, .desc ol { margin: 0 0 10px; max-width: 72ch; }
+.desc li { margin: 3px 0; }
+.prob code, .fb code, .misslist code { font: 0.86em var(--mono); background: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.exh { font-weight: 600; margin: 14px 0 6px; }
+.ex { border-left: 2px solid var(--line); padding: 2px 0 2px 14px; overflow-x: auto; }
+.ex pre { margin: 0; font: 13px/1.6 var(--mono); white-space: pre-wrap; word-break: break-word; }
+.ex b { font-weight: 600; font-family: var(--sans); }
+ul.cons { margin: 0; padding-left: 20px; } ul.cons li { margin: 4px 0; } ul.cons code { background: transparent; }
+
+/* results & map */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 14px 0; }
+.stat { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat b { display: block; font: 700 26px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.misslist { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 8px; }
+.misslist li { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.misslist .ans { color: var(--good); font-weight: 600; }
+.box { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+.insights { margin: 0; padding-left: 18px; } .insights li { margin: 5px 0; }
+.wide-t { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+th { font: 600 11px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-top: 0; }
+td.n, th.n { text-align: right; }
+.catblock { margin: 18px 0; }
+.cathead { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.cathead b { font: 600 16px var(--display); letter-spacing: .04em; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18px, 1fr)); gap: 4px; margin-top: 8px; }
+.cell { aspect-ratio: 1; max-width: 100%; border-radius: 3px; background: var(--dim); border: 0; padding: 0; cursor: pointer; }
+.cell.l { background: var(--learn); } .cell.a { background: var(--good); } .cell.m { background: var(--bad); }
+.cell[aria-pressed="true"] { outline: 2px solid var(--fg); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.peek { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-top: 10px; }
+footer { max-width: 780px; margin: 18px auto 0; font-size: 12px; color: var(--muted); }
+.wide-on footer { max-width: 1100px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: none) { .kbd-only { display: none; } }
+</style>
+
+<div class="wrap" id="wrap">
+  <header>
+    <h1 class="brand">Interview <span>Reflex</span></h1>
+    <nav id="nav">
+      <button data-view="play">Play</button>
+      <button data-view="map">My patterns</button>
+    </nav>
+  </header>
+  <main class="screen" id="screen"></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/*LCGEN*/
+/*MLCONTENT*/
+/*LCPATTERNS*/
+
+// ===== LeetCode cards in the same engine =====
+CATS.leetcode = { name: "LeetCode Pattern", target: 20000, blurb: "LeetCode-format problem → the pattern that solves it." };
+const CAT_ORDER = ["leetcode", "why", "name", "tool", "diagnose", "compute", "shapes"];
+TEMPLATES.forEach(t => ITEMS.push({ id: "lc-" + t.id, cat: "leetcode", p: t.p, label: t.stories[0].title, lc: t }));
+const CONFUSE = {
+  sliding_window: ["two_pointers", "arrays_hashing", "modified_binary_search"], two_pointers: ["sliding_window", "arrays_hashing", "linked_list"],
+  modified_binary_search: ["two_pointers", "top_k", "sliding_window"], top_k: ["arrays_hashing", "modified_binary_search", "stack"],
+  arrays_hashing: ["sliding_window", "two_pointers", "top_k"], stack: ["arrays_hashing", "two_pointers", "linked_list"],
+  linked_list: ["two_pointers", "stack", "arrays_hashing"], binary_tree_dfs: ["binary_tree_bfs", "subsets", "graphs"],
+  binary_tree_bfs: ["binary_tree_dfs", "graphs", "topological_sort"], graphs: ["binary_tree_bfs", "topological_sort", "binary_tree_dfs"],
+  topological_sort: ["graphs", "binary_tree_bfs", "stack"], subsets: ["binary_tree_dfs", "graphs", "arrays_hashing"]
+};
+function probHTML(pr) {
+  const body = pr.body.map(x => (/^<(ul|ol)/.test(x) ? x : `<p>${x}</p>`)).join("");
+  const ex = pr.examples.map((e, i) => `<p class="exh">Example ${i + 1}:</p><div class="ex"><pre><b>Input:</b> ${esc(e.input)}\n<b>Output:</b> ${esc(e.output)}</pre></div>`).join("");
+  return `<div class="phead"><h3>${pr.title}</h3><span class="diff ${pr.diff}">${pr.diff}</span></div><div class="desc">${body}</div>${ex}
+    <p class="exh">Constraints:</p><ul class="cons">${pr.cons.map(c => `<li><code>${c}</code></li>`).join("")}</ul>${pr.follow ? `<p class="exh">Follow-up:</p><p>${pr.follow}</p>` : ""}`;
+}
+function lcCard(item) {
+  const pr = buildProblem(item.lc), p = pr.p;
+  const hist = Object.entries(prog.conf || {}).filter(([k]) => k.endsWith("|" + p)).sort((a, b) => b[1] - a[1]).map(([k]) => k.split("|")[0]).filter(g => PATTERNS[g]);
+  const ds = [];
+  for (const g of [...hist.slice(0, 1), ...shuffle(CONFUSE[p]).slice(0, 2), ...shuffle(ORDER)]) if (g !== p && !ds.includes(g) && ds.length < 3) ds.push(g);
+  const keys = shuffle([p, ...ds]);
+  return { id: item.id, cat: "leetcode", p, keys, t: pr.title, q: probHTML(pr), opts: keys.map(k => PATTERNS[k].name), ans: keys.indexOf(p), x: pr.why, needs: pr.needs };
+}
+const card = item => (item.lc ? lcCard(item) : makeCard(item));
+
+// ===== state =====
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const today = () => new Date().toLocaleDateString("en-CA");
+const secs = ms => (ms / 1000).toFixed(1) + "s";
+const pct = x => (x === null || x === undefined ? "—" : Math.round(x * 100) + "%");
+const RUN_LEN = 30, AUTO_STREAK = 3;
+const BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const MODES = [
+  ["mixed", "Everything", "LeetCode problems and ML questions in one stream", () => true],
+  ["leetcode", "LeetCode patterns", CATS.leetcode.blurb, i => i.cat === "leetcode"],
+  ["ml", "All ML", "The six ML categories together", i => i.cat !== "leetcode"],
+  ...CAT_ORDER.slice(1).map(c => [c, CATS[c].name, CATS[c].blurb, i => i.cat === c])
+];
+const MODE = Object.fromEntries(MODES.map(m => [m[0], m]));
+
+const LKEY = "interview-reflex-v1";
+const EMPTY = () => ({ v: 1, total: 0, correct: 0, runs: 0, items: {}, days: {}, conf: {}, cats: {}, pat: {}, migratedLC: false });
+function loadLocal() { try { const x = JSON.parse(localStorage.getItem(LKEY)); return x && x.v === 1 ? Object.assign(EMPTY(), x) : EMPTY(); } catch (e) { return EMPTY(); } }
+function saveLocal() { try { localStorage.setItem(LKEY, JSON.stringify(prog)); } catch (e) {} }
+let prog = loadLocal();
+let mode = (() => { try { const m = localStorage.getItem(LKEY + "-mode"); return MODE[m] ? m : "mixed"; } catch (e) { return "mixed"; } })();
+let soundOn = (() => { try { return localStorage.getItem(LKEY + "-sound") !== "off"; } catch (e) { return true; } })();
+
+// Carry over progress from the earlier LeetCode Pattern Drill (same link).
+function migrateLC(old) {
+  if (prog.migratedLC || !old || old.v !== 2) return false;
+  const now = Date.now();
+  for (const [tid, s] of Object.entries(old.tpl || {})) { const id = "lc-" + tid; if (BY_ID[id] && !prog.items[id]) prog.items[id] = { n: s.n, c: s.c, fs: 0, best: 0, last: now, lastWrong: false }; }
+  prog.total += old.total || 0; prog.correct += old.correct || 0;
+  for (const [k, n] of Object.entries(old.conf || {})) if (!k.startsWith("none|")) prog.conf[k] = (prog.conf[k] || 0) + n;
+  for (const [d, v] of Object.entries(old.days || {})) { const t = prog.days[d] || (prog.days[d] = { n: 0, c: 0 }); t.n += v.n; t.c += v.c; }
+  for (const [p, v] of Object.entries(old.pat || {})) prog.pat[p] = { n: v.n, c: v.c, ms: v.ms, r: v.r || "" };
+  const L = prog.cats.leetcode || (prog.cats.leetcode = { n: 0, c: 0, ms: 0 });
+  Object.values(old.pat || {}).forEach(v => { L.n += v.n; L.c += v.c; L.ms += v.ms; });
+  prog.migratedLC = true; return true;
+}
+if (!prog.migratedLC) { try { const old = JSON.parse(localStorage.getItem("pattern-drill-progress-v2")); if (migrateLC(old)) saveLocal(); } catch (e) {} }
+
+// ===== account sync (debounced) =====
+let docRef = null, oldRef = null, sync = "local", saveTimer = null, writing = false, again = false;
+function persist(now) { saveLocal(); if (!docRef) return; clearTimeout(saveTimer); saveTimer = setTimeout(flush, now ? 0 : 4000); }
+async function flush() {
+  if (!docRef) return; if (writing) { again = true; return; }
+  writing = true;
+  try { await docRef.set(JSON.parse(JSON.stringify(prog))); sync = "synced"; }
+  catch (e) { if (e && (e.code === "revoked" || e.code === "not_granted")) { docRef = null; sync = "local"; } else sync = "error"; }
+  writing = false; renderFoot(); if (again) { again = false; flush(); }
+}
+async function initSync() {
+  if (!window.claude || !window.claude.use) return renderFoot();
+  sync = "loading"; renderFoot();
+  const timer = setTimeout(() => { if (sync === "loading") { sync = "local"; renderFoot(); } }, 10000);
+  try {
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const uid = db && user ? await user.id() : null;
+    if (!uid) { clearTimeout(timer); sync = "local"; return renderFoot(); }
+    docRef = db.doc("data/users/" + uid + "/reflex");
+    const snap = await docRef.get();
+    const r = snap.exists ? snap.data() : null;
+    let changed = false;
+    if (r && r.v === 1 && (r.total || 0) >= prog.total) { prog = Object.assign(EMPTY(), r); saveLocal(); changed = true; }
+    if (!prog.migratedLC) {
+      const o = await db.doc("data/users/" + uid + "/progress").get();
+      if (o.exists && migrateLC(o.data())) changed = true; else prog.migratedLC = true;
+    }
+    clearTimeout(timer);
+    sync = "synced";
+    if (changed || prog.total) persist(true);
+    if (changed && view !== "run") render();
+  } catch (e) { clearTimeout(timer); sync = "local"; }
+  renderFoot();
+}
+function renderFoot() {
+  const t = { local: "Progress is saved in this browser.", loading: "Connecting to your account…", synced: "Progress is saved to your account. Anyone you share this with gets their own.", error: "Couldn't save to your account just now; this browser keeps a copy." }[sync];
+  $("#foot").textContent = `${t} ${ITEMS.length} cards: ${TEMPLATES.length} LeetCode problem types and ${ITEMS.length - TEMPLATES.length} ML cards.`;
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden && docRef) { clearTimeout(saveTimer); flush(); } });
+
+// ===== item state =====
+function st(id) { return prog.items[id]; }
+function stateOf(id) { const s = st(id); if (!s) return "n"; if (s.fs >= AUTO_STREAK) return "a"; if (s.lastWrong) return "m"; return "l"; }
+function counts(filter) { const c = { n: 0, l: 0, m: 0, a: 0, total: 0 }; ITEMS.filter(filter).forEach(i => { c[stateOf(i.id)]++; c.total++; }); return c; }
+function mastery(p) { const r = (prog.pat[p] && prog.pat[p].r) || ""; if (!r) return null; let num = 0.5, den = 1, w = 1; for (let i = r.length - 1; i >= 0; i--) { num += w * (r[i] === "1" ? 1 : 0); den += w; w *= 0.85; } return num / den; }
+
+function record(c, k, ok, ms) {
+  const target = CATS[c.cat].target;
+  const s = prog.items[c.id] || (prog.items[c.id] = { n: 0, c: 0, fs: 0, best: 0, last: 0, lastWrong: false });
+  const wasAuto = s.fs >= AUTO_STREAK;
+  s.n++; s.last = Date.now();
+  if (ok) { s.c++; s.lastWrong = false; if (ms <= target) s.fs++; s.best = s.best ? Math.min(s.best, ms) : ms; }
+  else { s.fs = 0; s.lastWrong = true; }
+  prog.total++; if (ok) prog.correct++;
+  const d = prog.days[today()] || (prog.days[today()] = { n: 0, c: 0 }); d.n++; if (ok) d.c++;
+  const C = prog.cats[c.cat] || (prog.cats[c.cat] = { n: 0, c: 0, ms: 0 }); C.n++; if (ok) C.c++; C.ms += Math.min(ms, 600000);
+  if (c.cat === "leetcode") {
+    const P = prog.pat[c.p] || (prog.pat[c.p] = { n: 0, c: 0, ms: 0, r: "" });
+    P.n++; if (ok) P.c++; P.ms += Math.min(ms, 600000); P.r = (P.r + (ok ? "1" : "0")).slice(-20);
+    if (!ok) { const key = c.keys[k] + "|" + c.p; prog.conf[key] = (prog.conf[key] || 0) + 1; }
+  }
+  persist();
+  return { becameAuto: !wasAuto && s.fs >= AUTO_STREAK };
+}
+
+// ===== run construction =====
+function weight(id) {
+  const s = st(id); if (!s) return 1;
+  if (s.lastWrong) return 3;
+  if (s.fs < AUTO_STREAK) return 2.2;
+  return Math.min(1.2, 0.15 + ((Date.now() - s.last) / 864e5) * 0.15);
+}
+function buildRun() {
+  const pool = ITEMS.filter(MODE[mode][3]), picked = [], used = new Set(); let fresh = 0;
+  for (let guard = 0; picked.length < RUN_LEN && guard < 2000; guard++) {
+    const cands = pool.filter(i => !used.has(i.id) || i.gen || i.lc).filter(i => !(stateOf(i.id) === "n" && fresh >= 10));
+    const list = cands.length ? cands : pool;
+    const ws = list.map(i => weight(i.id) * (used.has(i.id) ? 0.3 : 1)), tot = ws.reduce((a, b) => a + b, 0);
+    let r = Math.random() * tot, it = list[list.length - 1];
+    for (let k = 0; k < list.length; k++) { r -= ws[k]; if (r <= 0) { it = list[k]; break; } }
+    if (picked.length && picked[picked.length - 1].id === it.id && list.length > 1) continue;
+    if (stateOf(it.id) === "n" && !used.has(it.id)) fresh++;
+    used.add(it.id); picked.push(it);
+  }
+  return picked;
+}
+
+// ===== sound =====
+let actx = null;
+function beep(ok) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.type = ok ? "triangle" : "sawtooth";
+    o.frequency.setValueAtTime(ok ? 660 : 160, t); if (ok) o.frequency.exponentialRampToValueAtTime(990, t + 0.08);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(ok ? 0.12 : 0.08, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + (ok ? 0.12 : 0.22));
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.25);
+  } catch (e) {}
+}
+
+// ===== views =====
+let view = "title", run = null, raf = null, peekId = null;
+function setNav() { document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-current", (b.dataset.view === "map") === (view === "map") ? "true" : "false")); }
+function setWide(on) { $("#screen").classList.toggle("wide", on); $("#wrap").classList.toggle("wide-on", on); }
+function render() { setNav(); cancelAnimationFrame(raf); setWide(false); ({ title: renderTitle, run: renderCard, results: renderResults, map: renderMap })[view](); }
+const meterHTML = c => `<div class="meter"><i class="a" style="width:${(c.a / (c.total || 1)) * 100}%"></i><i class="l" style="width:${((c.l + c.m) / (c.total || 1)) * 100}%"></i></div>`;
+
+function renderTitle() {
+  const all = counts(() => true);
+  $("#screen").innerHTML = `
+    <div class="label">${all.a} of ${all.total} cards automatic · ${prog.total.toLocaleString()} answered</div>
+    <h2>Answer before you think</h2>
+    <p class="small">${RUN_LEN} cards per run, LeetCode problems and ML questions in one stream. Misses come back a few cards later. A card is automatic after ${AUTO_STREAK} correct answers in a row, each under its target time.</p>
+    <div class="modes">${MODES.map(([k, n, b, f]) => { const c = counts(f); const tg = CATS[k] ? ` · target ${CATS[k].target / 1000}s` : ""; return `<button class="mode" data-mode="${k}" aria-pressed="${mode === k}"><b>${n}</b><small>${b}</small><small>${c.a}/${c.total} automatic${tg}</small>${meterHTML(c)}</button>`; }).join("")}</div>
+    <div class="row"><button class="btn" data-act="start">Start run</button><button class="btn ghost" data-act="sound">Sound: ${soundOn ? "on" : "off"}</button><span class="small kbd-only">Enter to start · 1–4 to answer</span></div>`;
+}
+
+function startRun() {
+  prog.runs++; saveLocal();
+  run = { queue: buildRun().map(i => ({ item: i, card: card(i), retry: 0 })), i: 0, combo: 0, best: 0, res: [], auto: 0, shownAt: 0, answered: null };
+  view = "run"; run.shownAt = performance.now(); render();
+}
+function renderCard() {
+  const r = run, e = r.queue[r.i], c = e.card, cat = CATS[c.cat], isLC = c.cat === "leetcode";
+  setWide(isLC);
+  const hud = `<div class="hud"><span class="cat">${cat.name}</span><span>${r.i + 1}/${r.queue.length}</span>${e.retry ? `<span style="color:var(--bad)">retry</span>` : ""}<span class="combo">combo <b>${r.combo}</b></span></div>
+    <div class="track"><i style="width:${(r.i / r.queue.length) * 100}%"></i></div>
+    <div class="clock" id="clock"><i id="clockbar"></i></div>`;
+  const pad = `<div class="pad${isLC ? " one" : ""}" id="pad">${c.opts.map((o, k) => `<button class="opt" data-opt="${k}"><span class="k">${k + 1}</span><span>${esc(o)}</span></button>`).join("")}</div>
+    <div class="fb" id="fb"><p class="hint kbd-only">Keys 1–4. Target ${cat.target / 1000}s.</p></div>`;
+  $("#screen").innerHTML = isLC
+    ? hud + `<div class="lcgrid"><div class="prob">${c.q}</div><div class="side"><p class="label" style="margin:0 0 8px">Which pattern solves this?</p>${pad}</div></div>`
+    : hud + `<div class="card"><div class="q">${c.q}</div></div>${pad}`;
+  const bar = $("#clockbar"), clock = $("#clock");
+  const loop = () => { if (!run || run.answered || view !== "run") return; const t = performance.now() - run.shownAt, f = Math.min(1, t / cat.target); bar.style.width = f * 100 + "%"; clock.classList.toggle("late", t > cat.target); raf = requestAnimationFrame(loop); };
+  loop();
+}
+function lcMore(c, k, ok) {
+  const P = PATTERNS[c.p];
+  let h = `<p class="label" style="margin-top:8px">Knowledge this problem needs</p><ul>${c.needs.map(n => `<li>${n}</li>`).join("")}</ul>`;
+  if (!ok) { h += `<p class="label">How to spot ${P.name}</p><p>${P.recognize}</p>`; if (k >= 0) h += `<p class="label">When ${PATTERNS[c.keys[k]].name} fits instead</p><p>${PATTERNS[c.keys[k]].recognize}</p>`; }
+  return h;
+}
+function answer(k) {
+  const r = run; if (!r || r.answered || view !== "run") return;
+  const e = r.queue[r.i], c = e.card, ms = performance.now() - r.shownAt, ok = k === c.ans;
+  r.answered = { k, ok, ms };
+  const out = record(c, k, ok, ms);
+  if (out.becameAuto) r.auto++;
+  r.res.push({ id: c.id, cat: c.cat, t: c.t || c.q, a: c.opts[c.ans], ok, ms, x: c.x });
+  if (ok) { r.combo++; r.best = Math.max(r.best, r.combo); } else r.combo = 0;
+  if (!ok && e.retry < 2) r.queue.splice(Math.min(r.queue.length, r.i + 4), 0, { item: e.item, card: card(e.item), retry: e.retry + 1 });
+  beep(ok); cancelAnimationFrame(raf);
+  document.querySelectorAll(".opt").forEach((b, j) => { b.disabled = true; if (j === c.ans) b.classList.add("right"); if (j === k && !ok) b.classList.add("wrong"); });
+  const fast = ms <= CATS[c.cat].target, isLC = c.cat === "leetcode";
+  const more = isLC ? lcMore(c, k, ok) : "";
+  $("#pad").classList.add(ok ? "flash-ok" : "flash-no");
+  const nextBtn = `<button class="btn" data-act="next" style="margin-top:6px${isLC ? ";width:100%" : ""}">Next</button><span class="small kbd-only" style="margin-left:10px">Enter</span>`;
+  $("#fb").innerHTML = ok
+    ? `<span class="verdict ok">${fast ? "Clean" : "Correct, slow"}</span><span class="ms">${secs(ms)}${out.becameAuto ? " · now automatic" : ""}</span>${fast ? "" : `<p class="small">${c.x}</p>${more}${nextBtn}`}`
+    : `<span class="verdict no">Miss</span><span class="ms">${secs(ms)} · comes back in a few cards</span><p>${c.x}</p>${more}${nextBtn}`;
+  if (ok && fast) setTimeout(() => { if (run === r && r.answered && view === "run") next(); }, isLC ? 700 : 420);
+}
+function next() {
+  const r = run; if (!r) return;
+  if (view === "results") return startRun();
+  if (!r.answered) return;
+  r.i++; r.answered = null;
+  if (r.i >= r.queue.length) { view = "results"; persist(true); return render(); }
+  r.shownAt = performance.now(); renderCard(); window.scrollTo && window.scrollTo(0, 0);
+}
+function renderResults() {
+  const r = run, res = r.res, right = res.filter(x => x.ok).length;
+  const times = res.filter(x => x.ok).map(x => x.ms).sort((a, b) => a - b), med = times.length ? times[Math.floor(times.length / 2)] : 0;
+  const misses = [], seen = new Set(); res.filter(x => !x.ok).forEach(x => { if (!seen.has(x.id)) { seen.add(x.id); misses.push(x); } });
+  const all = counts(MODE[mode][3]);
+  $("#screen").innerHTML = `
+    <div class="label">Run ${prog.runs} · ${MODE[mode][1]}</div>
+    <h2>${right} / ${res.length}</h2>
+    <div class="stats">
+      <div class="stat"><span class="label">Median</span><b>${times.length ? secs(med) : "—"}</b></div>
+      <div class="stat"><span class="label">Best combo</span><b>${r.best}</b></div>
+      <div class="stat"><span class="label">New automatic</span><b>${r.auto}</b></div>
+      <div class="stat"><span class="label">Automatic</span><b>${all.a}/${all.total}</b></div>
+    </div>
+    ${misses.length ? `<div class="label">Missed</div><ul class="misslist">${misses.slice(0, 10).map(m => `<li><div class="small">${CATS[m.cat].name}</div><div>${m.t}</div><div class="ans">${esc(m.a)}</div><div class="small">${m.x}</div></li>`).join("")}</ul>` : `<p>No misses.</p>`}
+    <div class="row"><button class="btn" data-act="start">Run again</button><button class="btn ghost" data-act="title">Change mode</button><button class="btn ghost" data-view="map">My patterns</button><span class="small kbd-only">Enter to run again</span></div>`;
+}
+
+function renderMap() {
+  const all = counts(() => true);
+  const catRows = CAT_ORDER.map(c => { const s = prog.cats[c] || { n: 0, c: 0, ms: 0 }; return { c, n: s.n, acc: s.n ? s.c / s.n : null, avg: s.n ? s.ms / s.n : null, cnt: counts(i => i.cat === c) }; });
+  const patRows = ORDER.map(p => { const s = prog.pat[p] || { n: 0, c: 0, ms: 0 }; return { p, n: s.n, acc: s.n ? s.c / s.n : null, m: mastery(p), avg: s.n ? s.ms / s.n : null }; });
+  const conf = Object.entries(prog.conf || {}).filter(([k]) => { const [g, a] = k.split("|"); return PATTERNS[g] && PATTERNS[a]; }).sort((a, b) => b[1] - a[1]);
+  const ins = [];
+  if (!prog.total) ins.push("Nothing answered yet. One run of 30 is enough to see where you stand.");
+  const wc = catRows.filter(r => r.n >= 5).sort((a, b) => a.acc - b.acc)[0]; if (wc) ins.push(`Weakest category: <strong>${CATS[wc.c].name}</strong>, ${pct(wc.acc)} correct.`);
+  const wp = patRows.filter(r => r.n >= 3).sort((a, b) => a.m - b.m)[0]; if (wp) ins.push(`Weakest LeetCode pattern: <strong>${PATTERNS[wp.p].name}</strong>, ${pct(wp.m)} on recent answers.`);
+  if (conf.length) { const [g, a] = conf[0][0].split("|"); ins.push(`Most common mix-up: answering <strong>${PATTERNS[g].name}</strong> when it's <strong>${PATTERNS[a].name}</strong> (${conf[0][1]}×).`); }
+  const slow = catRows.filter(r => r.n >= 5).sort((a, b) => b.avg / CATS[b.c].target - a.avg / CATS[a.c].target)[0]; if (slow && slow.avg > CATS[slow.c].target) ins.push(`Slowest against target: <strong>${CATS[slow.c].name}</strong>, ${secs(slow.avg)} average vs ${CATS[slow.c].target / 1000}s.`);
+  const legend = `<div class="legend"><span><i style="background:var(--dim)"></i>Not seen</span><span><i style="background:var(--bad)"></i>Missed last time</span><span><i style="background:var(--learn)"></i>Learning</span><span><i style="background:var(--good)"></i>Automatic</span></div>`;
+  const blocks = CAT_ORDER.map(cat => {
+    const its = ITEMS.filter(i => i.cat === cat), c = counts(i => i.cat === cat);
+    return `<div class="catblock"><div class="cathead"><b>${CATS[cat].name}</b><span class="small">${c.a}/${c.total} automatic · target ${CATS[cat].target / 1000}s</span></div>
+      <div class="grid">${its.map(i => `<button class="cell ${stateOf(i.id)}" data-peek="${i.id}" aria-pressed="${peekId === i.id}" aria-label="${esc(i.label || i.a || i.id)}"></button>`).join("")}</div>
+      ${peekId && BY_ID[peekId].cat === cat ? peekHTML(BY_ID[peekId]) : ""}</div>`;
+  }).join("");
+  $("#screen").innerHTML = `<div class="label">My patterns</div><h2>${all.a} of ${all.total} automatic</h2>
+    <div class="stats">
+      <div class="stat"><span class="label">Answered</span><b>${prog.total.toLocaleString()}</b></div>
+      <div class="stat"><span class="label">Correct</span><b>${pct(prog.total ? prog.correct / prog.total : null)}</b></div>
+      <div class="stat"><span class="label">Runs</span><b>${prog.runs}</b></div>
+      <div class="stat"><span class="label">Days</span><b>${Object.keys(prog.days).length}</b></div>
+    </div>
+    <div class="box"><h3>What the data says</h3><ul class="insights">${ins.map(x => `<li>${x}</li>`).join("")}</ul></div>
+    <div class="box"><h3>By category</h3><div class="wide-t"><table><tr><th>Category</th><th class="n">Seen</th><th class="n">Correct</th><th class="n">Avg time</th><th class="n">Automatic</th></tr>
+      ${catRows.map(r => `<tr><td>${CATS[r.c].name}</td><td class="n">${r.n}</td><td class="n">${pct(r.acc)}</td><td class="n">${r.avg === null ? "—" : secs(r.avg)}</td><td class="n">${r.cnt.a}/${r.cnt.total}</td></tr>`).join("")}</table></div></div>
+    <div class="box"><h3>LeetCode patterns</h3><div class="wide-t"><table><tr><th>Pattern</th><th class="n">Seen</th><th class="n">Correct</th><th class="n">Recent</th><th class="n">Avg time</th></tr>
+      ${patRows.map(r => `<tr><td>${PATTERNS[r.p].name}</td><td class="n">${r.n}</td><td class="n">${pct(r.acc)}</td><td class="n">${pct(r.m)}</td><td class="n">${r.avg === null ? "—" : secs(r.avg)}</td></tr>`).join("")}</table></div>
+      ${conf.length ? `<p class="label" style="margin-top:14px">Mix-ups</p><div class="wide-t"><table><tr><th>It was</th><th>You answered</th><th class="n">Times</th></tr>${conf.slice(0, 8).map(([k, n]) => { const [g, a] = k.split("|"); return `<tr><td>${PATTERNS[a].name}</td><td>${PATTERNS[g].name}</td><td class="n">${n}</td></tr>`; }).join("")}</table></div>` : ""}</div>
+    ${legend}${blocks}
+    <div class="row" style="margin-top:10px"><button class="btn ghost" data-act="reset" id="resetBtn">Reset all progress</button></div>`;
+}
+function peekHTML(item) {
+  const s = st(item.id);
+  const stat = s ? `${s.c}/${s.n} correct · fast streak ${s.fs}/${AUTO_STREAK}${s.best ? ` · best ${secs(s.best)}` : ""}` : "Not seen yet";
+  if (item.lc) return `<div class="peek"><div class="label">LeetCode problem type · ${stat}</div><div style="margin:6px 0">${item.lc.stories.map(x => x.title).join(" / ")}</div><div style="color:var(--good);font-weight:600">${PATTERNS[item.p].name}</div><div class="small">${item.lc.why}</div></div>`;
+  const c = makeCard(item);
+  return `<div class="peek"><div class="label">${item.gen ? "Generated · " + esc(item.label) : "Card"} · ${stat}</div><div style="margin:6px 0">${c.q}</div><div style="color:var(--good);font-weight:600">${esc(c.opts[c.ans])}</div><div class="small">${c.x}</div></div>`;
+}
+
+// ===== events =====
+let resetArmed = false;
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-view],[data-mode],[data-act],[data-opt],[data-peek]"); if (!t) return;
+  if (t.dataset.view) {
+    if (t.dataset.view === "map") view = "map";
+    else if (run && run.i < run.queue.length) { view = "run"; if (!run.answered) run.shownAt = performance.now(); }
+    else view = "title";
+    resetArmed = false; return render();
+  }
+  if (t.dataset.mode) { mode = t.dataset.mode; try { localStorage.setItem(LKEY + "-mode", mode); } catch (err) {} return render(); }
+  if (t.dataset.opt) return answer(+t.dataset.opt);
+  if (t.dataset.peek) { peekId = peekId === t.dataset.peek ? null : t.dataset.peek; return render(); }
+  const a = t.dataset.act;
+  if (a === "start") return startRun();
+  if (a === "next") return next();
+  if (a === "title") { view = "title"; return render(); }
+  if (a === "sound") { soundOn = !soundOn; try { localStorage.setItem(LKEY + "-sound", soundOn ? "on" : "off"); } catch (err) {} if (soundOn) beep(true); return render(); }
+  if (a === "reset") {
+    if (!resetArmed) { resetArmed = true; t.textContent = "Click again to erase everything"; return; }
+    prog = EMPTY(); prog.migratedLC = true; run = null; resetArmed = false; persist(true); render();
+  }
+});
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (view === "run" && run && !run.answered && /^[1-4]$/.test(e.key)) { e.preventDefault(); return answer(+e.key - 1); }
+  if (e.key === "Enter" || e.key === " ") {
+    if (view === "title" || view === "results") { e.preventDefault(); return startRun(); }
+    if (view === "run" && run && run.answered) { e.preventDefault(); return next(); }
+  }
+  if (e.key === "Escape" && view === "run") { view = "title"; run = null; render(); }
+});
+
+renderFoot();
+render();
+initSync();
+</script>

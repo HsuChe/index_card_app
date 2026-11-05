@@ -1,0 +1,13 @@
+{
+  "name": "interview-reflex",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repetition drill for LeetCode pattern recognition and ML interview questions.",
+  "scripts": {
+    "build": "node scripts/build.js --standalone",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
